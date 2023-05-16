@@ -9,16 +9,26 @@ options(scipen=999)
 
 # Define directories
 data_dir <- "/home/jovyan/common_data/jagermeyer/raw"
-plot_dir <- "/home/jovyan/common_data/jagermeyer/plots"
+plot_dir <- "/home/jovyan/common_data/jagermeyer/tz_plots"
+if(!dir.exists(plot_dir)){
+  dir.create(plot_dir,recursive = T)
+}
 
 # Focal regions
-#focal_regions<-c("Ikungi","Simanjiro","Micheweni")
-focal_regions<-c("Singida","Pemba North","Manyara")
+focal_regions2<-c("Ikungi","Simanjiro","Micheweni")
+focal_regions1<-c("Singida","Pemba North","Manyara")
 
 # Admin Level
 admin_level<-"_1"
+if(admin_level=="_1"){
+  focal_regions<-focal_regions1
+}else{
+  focal_regions<-focal_regions2
+}
+
 
 # Create a directory if it does not exist
+plot_dir<-paste0(plot_dir,"/admin",admin_level)
 if(!dir.exists(plot_dir)){dir.create(plot_dir)}
 
 # Load files from data_dir
@@ -143,6 +153,9 @@ reg_dat_all <- rbindlist(lapply(1:nrow(Files),FUN=function(i){
   reg_dat
 }))
 
+fwrite(paste0(plot_dir,"/",summary,"raw_extraction.csv"))
+
+
 # Transform the dataframe from wide to long format
 reg_dat <- melt(reg_dat_all, id.vars=c("region","area","crop","scenario","model","type"))
 
@@ -187,7 +200,7 @@ summary <- reg_dat[, list(
   area_inc_50 = sum(area[value > 50], na.rm = TRUE)),
   by = list(region, year, crop, scenario, model, type)]
 
-fwrite(summary,"s1-region-year-crop-scen-model-type.csv")
+fwrite(paste0(plot_dir,"/",summary,"s1-region-year-crop-scen-model-type.csv"))
 
 # create summarized data frame grouped by "region", "crop", "scenario", "model", and "type"
 summary2 <- summary[, list(
@@ -217,7 +230,7 @@ summary2 <- summary[, list(
   area_inc_50 = mean(area_inc_50, na.rm = TRUE)),
   by = list(region, crop, scenario, model, type)]
 
-fwrite(summary2,"s2-region-crop-scen-model-type.csv")
+fwrite(paste0(plot_dir,"/",summary2,"s2-region-crop-scen-model-type.csv"))
 
 
 # function to calculate the confidence interval
@@ -246,7 +259,7 @@ summary3<-summary[,list(mean_sd=sd(mean,na.rm=T),
                         max_mean=mean(max,na.rm=T)),
                   by=list(region,crop,year,type,scenario)]
 
-fwrite(summary3,"s3-region-crop-year-type-scenario.csv")
+fwrite(summary3,paste0(plot_dir,"/s3-region-crop-year-type-scenario.csv"))
 
 # Plot Results ####
 
